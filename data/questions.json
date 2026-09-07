@@ -19,10 +19,10 @@
     "q": 8,
     "mondai": 2,
     "paper": "2024-07",
-    "stem": "1年で一番忙しい時期なので、休日を（　　）して働いています。",
+    "stem": "1年でいちばん忙しい時期なので、休日を（　　）して働いています。",
     "options": ["返上", "寄付", "還元", "進呈"],
     "answer": "返上",
-    "note": "語幹・選択肢は analysis/2024-07-vocab-context-words.md（Q2）と同一、正解１番目＝返上は複数公開ソースで検証済み。",
+    "note": "User 手入力（いちばん＝平仮名）。旧 md 由来の「一番」を公式語・平仮名に修正。選択肢・正解（問8＝４番目・返上）は複数公開ソースで検証済み。",
     "sources": [
       "http://aixinjp.com/a/lianxifangshi/zhentidaan/2024/0708/1143.html",
       "https://passjapanese.com/en/jlpt/n1/exam/2024-07-vocabulary",
