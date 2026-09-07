@@ -35,6 +35,18 @@ Clicking the kanji (or its icon cluster) jumps to the word card in the
 | `tools/annotate_pdf.py` | draws badges + link annotations onto the PDF |
 | `data/kanji_labels.json` | kanji → {問, Q, words, url} generated map |
 | `data/questions.json` | hand-inputted exam questions, validated & cited |
+| `data/prev_*.png` | preview renders (git-ignored, for inspection) |
+
+## 注釈の種類（annotated PDF に含まれる 3 種）
+
+1. **アイコンバッジ** – 教材由来の常用漢字（本表エントリ）の字形直上余白帯に
+   アイコン群（2024 / N1 / ①・②）を描き、語彙カード（`#w-…`）or 問題（`#q…`）
+   へのリンクを付す。
+2. **語のハイライト（黄色）** – 教材の語（漢字単語）が本表の音・訓・例・備考欄に
+   現れている場合、その語をへば標し語彙カードへリンク（`tools/annotate_pdf.py`
+   `highlight_words`）。
+3. **付録（表外漢字）** – 常用漢字表に収録されない文字（表外）を、末尾の新ページに
+   本表と同じ体裁（字形・音・訓・例・備考＋アイコン・リンク）で追記。
 
 ### Hand-inputted questions (語幹漢字 ネット追加)
 
@@ -51,8 +63,9 @@ Clicking the kanji (or its icon cluster) jumps to the word card in the
 ## Why two features are skipped for some kanji
 
 - 咎・脆 come from 2024 N1 words but are **outside** the `常用漢字表`
-  (表外漢字), so they have no entry to badge. They are reported by
-  `tools/annotate_pdf.py` as "NOT FOUND (skipped)".
+  (表外漢字), so they have no 本表 entry to badge. They are instead
+  appended on a new 付録 page (same layout as 本表: 字形・音・訓・例・備考
+  ＋ アイコン＋リンク). USER: 表外由此追加。
 
 ## Rebuilding
 

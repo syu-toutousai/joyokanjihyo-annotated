@@ -82,6 +82,7 @@ def main():
     if qfile.exists():
         for q in json.loads(qfile.read_text(encoding="utf-8")):
             text = q["stem"] + "".join(q["options"])
+            answer_chars = set(CJK_RE.findall(q["answer"]))
             for ch in set(CJK_RE.findall(text)):
                 e = kanji.setdefault(ch, {"mondai": [], "q": [], "words": [], "url": ""})
                 if q["mondai"] not in e["mondai"]:
@@ -90,7 +91,7 @@ def main():
                     e["q"].append(q["q"])
                 if ch not in card_chars and not e["url"]:
                     e["url"] = PAGE + "#q%d" % q["q"]
-                if q["answer"] not in e["words"]:
+                if (ch not in card_chars or ch in answer_chars) and q["answer"] not in e["words"]:
                     e["words"].append(q["answer"])
     for e in kanji.values():
         e["mondai"].sort()

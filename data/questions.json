@@ -3,7 +3,7 @@
     "q": 7,
     "mondai": 2,
     "paper": "2024-07",
-    "stem": "今回の遺跡の発見はこれまでの説を（　）から覆すものになりそうだ。",
+    "stem": "今回の遺跡の発見はこれまでの説を（　　）から覆すものになりそうだ。",
     "options": ["拠点", "根底", "原本", "元祖"],
     "answer": "根底",
     "note": "User 手入力。当初の「処点」は誤りで「拠点」に修正。関連語彙カードによる裏付け＋複数公開ソースで検証済み。",
@@ -11,6 +11,90 @@
       "http://aixinjp.com/a/lianxifangshi/zhentidaan/2024/0708/1143.html",
       "https://learnjapaneseaz.com/jlpt-n1-vocabulary-practice-test-42.html",
       "https://nihongoaz.com/jlpt-n1-vocabulary-practice-test-30.html",
+      "https://passjapanese.com/en/jlpt/n1/exam/2024-07-vocabulary",
+      "https://trynihongo.com/ja/de-thi-jlpt-tu-vung-ngu-phap-doc-hieu-n1-07-2024-q1353"
+    ]
+  },
+  {
+    "q": 8,
+    "mondai": 2,
+    "paper": "2024-07",
+    "stem": "1年で一番忙しい時期なので、休日を（　　）して働いています。",
+    "options": ["返上", "寄付", "還元", "進呈"],
+    "answer": "返上",
+    "note": "語幹・選択肢は analysis/2024-07-vocab-context-words.md（Q2）と同一、正解１番目＝返上は複数公開ソースで検証済み。",
+    "sources": [
+      "http://aixinjp.com/a/lianxifangshi/zhentidaan/2024/0708/1143.html",
+      "https://passjapanese.com/en/jlpt/n1/exam/2024-07-vocabulary",
+      "https://trynihongo.com/ja/de-thi-jlpt-tu-vung-ngu-phap-doc-hieu-n1-07-2024-q1353"
+    ]
+  },
+  {
+    "q": 9,
+    "mondai": 2,
+    "paper": "2024-07",
+    "stem": "外部からの問い合わせの電話は、用件を確認して担当者に（　　）ください。",
+    "options": ["取り次ぐ", "繰り越す", "差し替える", "引き渡す"],
+    "answer": "取り次いで",
+    "note": "語幹・選択肢は analysis/2024-07-vocab-context-words.md（Q3）と同一、正解（問9＝４番目・取り次いで）検証済み。",
+    "sources": [
+      "http://aixinjp.com/a/lianxifangshi/zhentidaan/2024/0708/1143.html",
+      "https://passjapanese.com/en/jlpt/n1/exam/2024-07-vocabulary",
+      "https://trynihongo.com/ja/de-thi-jlpt-tu-vung-ngu-phap-doc-hieu-n1-07-2024-q1353"
+    ]
+  },
+  {
+    "q": 10,
+    "mondai": 2,
+    "paper": "2024-07",
+    "stem": "新しい生活への期待と不安が（　　）し、気持ちが落ち着かない。",
+    "options": ["交錯", "混合", "連動", "反発"],
+    "answer": "交錯",
+    "note": "語幹・選択肢は analysis/2024-07-vocab-context-words.md（Q4）と同一、正解（問10＝１番目・交錯）検証済み。",
+    "sources": [
+      "http://aixinjp.com/a/lianxifangshi/zhentidaan/2024/0708/1143.html",
+      "https://passjapanese.com/en/jlpt/n1/exam/2024-07-vocabulary",
+      "https://trynihongo.com/ja/de-thi-jlpt-tu-vung-ngu-phap-doc-hieu-n1-07-2024-q1353"
+    ]
+  },
+  {
+    "q": 11,
+    "mondai": 2,
+    "paper": "2024-07",
+    "stem": "トンネル工事が始まって1年になるが、地盤の弱い箇所があり、工事は（　　）している。",
+    "options": ["難航", "低迷", "衰退", "脱落"],
+    "answer": "難航",
+    "note": "語幹・選択肢は analysis/2024-07-vocab-context-words.md（Q5）と同一、正解（問11＝１番目・難航）検証済み。",
+    "sources": [
+      "http://aixinjp.com/a/lianxifangshi/zhentidaan/2024/0708/1143.html",
+      "https://passjapanese.com/en/jlpt/n1/exam/2024-07-vocabulary",
+      "https://trynihongo.com/ja/de-thi-jlpt-tu-vung-ngu-phap-doc-hieu-n1-07-2024-q1353"
+    ]
+  },
+  {
+    "q": 12,
+    "mondai": 2,
+    "paper": "2024-07",
+    "stem": "会場は、人々の話し声で（　　）と騒がしく、アナウンスがよく聞こえなかった。",
+    "options": ["がやがや", "じわじわ", "どろどろ", "べたべた"],
+    "answer": "がやがや",
+    "note": "語幹・選択肢は analysis/2024-07-vocab-context-words.md（Q6）と同一、正解（問12＝３番目・がやがや）検証済み。",
+    "sources": [
+      "http://aixinjp.com/a/lianxifangshi/zhentidaan/2024/0708/1143.html",
+      "https://passjapanese.com/en/jlpt/n1/exam/2024-07-vocabulary",
+      "https://trynihongo.com/ja/de-thi-jlpt-tu-vung-ngu-phap-doc-hieu-n1-07-2024-q1353"
+    ]
+  },
+  {
+    "q": 13,
+    "mondai": 2,
+    "paper": "2024-07",
+    "stem": "登山に誘われたが、あまり経験がないので、みんなの（　　）になると思い、断った。",
+    "options": ["足手まとい", "骨折り", "裏目", "および腰"],
+    "answer": "足手まとい",
+    "note": "語幹・選択肢は analysis/2024-07-vocab-context-words.md（Q7）と同一、正解（問13＝２番目・足手まとい）検証済み。",
+    "sources": [
+      "http://aixinjp.com/a/lianxifangshi/zhentidaan/2024/0708/1143.html",
       "https://passjapanese.com/en/jlpt/n1/exam/2024-07-vocabulary",
       "https://trynihongo.com/ja/de-thi-jlpt-tu-vung-ngu-phap-doc-hieu-n1-07-2024-q1353"
     ]
