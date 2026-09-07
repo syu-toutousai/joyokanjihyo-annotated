@@ -1,0 +1,18 @@
+[
+  {
+    "q": 7,
+    "mondai": 2,
+    "paper": "2024-07",
+    "stem": "今回の遺跡の発見はこれまでの説を（　）から覆すものになりそうだ。",
+    "options": ["拠点", "根底", "原本", "元祖"],
+    "answer": "根底",
+    "note": "User 手入力。当初の「処点」は誤りで「拠点」に修正。関連語彙カードによる裏付け＋複数公開ソースで検証済み。",
+    "sources": [
+      "http://aixinjp.com/a/lianxifangshi/zhentidaan/2024/0708/1143.html",
+      "https://learnjapaneseaz.com/jlpt-n1-vocabulary-practice-test-42.html",
+      "https://nihongoaz.com/jlpt-n1-vocabulary-practice-test-30.html",
+      "https://passjapanese.com/en/jlpt/n1/exam/2024-07-vocabulary",
+      "https://trynihongo.com/ja/de-thi-jlpt-tu-vung-ngu-phap-doc-hieu-n1-07-2024-q1353"
+    ]
+  }
+]

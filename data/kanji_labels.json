@@ -48,6 +48,18 @@
   ],
   "url": "https://syu-toutousai.github.io/jlpt-n1-question-bank/vocab-words.html#w-%E4%BA%BA%E3%80%85"
  },
+ "今": {
+  "mondai": [
+   2
+  ],
+  "q": [
+   7
+  ],
+  "words": [
+   "根底"
+  ],
+  "url": "https://syu-toutousai.github.io/jlpt-n1-question-bank/vocab-words.html#q7"
+ },
  "付": {
   "mondai": [
    2
@@ -90,11 +102,13 @@
   ],
   "q": [
    1,
-   2
+   2,
+   7
   ],
   "words": [
    "元祖",
-   "還元"
+   "還元",
+   "根底"
   ],
   "url": "https://syu-toutousai.github.io/jlpt-n1-question-bank/vocab-words.html#w-%E5%85%83%E7%A5%96"
  },
@@ -139,10 +153,12 @@
    2
   ],
   "q": [
-   1
+   1,
+   7
   ],
   "words": [
-   "原本"
+   "原本",
+   "根底"
   ],
   "url": "https://syu-toutousai.github.io/jlpt-n1-question-bank/vocab-words.html#w-%E5%8E%9F%E6%9C%AC"
  },
@@ -255,6 +271,18 @@
   ],
   "url": "https://syu-toutousai.github.io/jlpt-n1-question-bank/vocab-words.html#w-%E9%A3%9F%E5%93%81"
  },
+ "回": {
+  "mondai": [
+   2
+  ],
+  "q": [
+   7
+  ],
+  "words": [
+   "根底"
+  ],
+  "url": "https://syu-toutousai.github.io/jlpt-n1-question-bank/vocab-words.html#q7"
+ },
  "売": {
   "mondai": [
    1
@@ -356,7 +384,8 @@
    2
   ],
   "q": [
-   1
+   1,
+   7
   ],
   "words": [
    "根底"
@@ -443,10 +472,12 @@
    2
   ],
   "q": [
-   1
+   1,
+   7
   ],
   "words": [
-   "拠点"
+   "拠点",
+   "根底"
   ],
   "url": "https://syu-toutousai.github.io/jlpt-n1-question-bank/vocab-words.html#w-%E6%8B%A0%E7%82%B9"
  },
@@ -504,10 +535,12 @@
    2
   ],
   "q": [
-   1
+   1,
+   7
   ],
   "words": [
-   "原本"
+   "原本",
+   "根底"
   ],
   "url": "https://syu-toutousai.github.io/jlpt-n1-question-bank/vocab-words.html#w-%E5%8E%9F%E6%9C%AC"
  },
@@ -516,7 +549,8 @@
    2
   ],
   "q": [
-   1
+   1,
+   7
   ],
   "words": [
    "根底"
@@ -588,10 +622,12 @@
    2
   ],
   "q": [
-   1
+   1,
+   7
   ],
   "words": [
-   "拠点"
+   "拠点",
+   "根底"
   ],
   "url": "https://syu-toutousai.github.io/jlpt-n1-question-bank/vocab-words.html#w-%E6%8B%A0%E7%82%B9"
  },
@@ -600,10 +636,12 @@
    2
   ],
   "q": [
-   4
+   4,
+   7
   ],
   "words": [
-   "反発"
+   "反発",
+   "根底"
   ],
   "url": "https://syu-toutousai.github.io/jlpt-n1-question-bank/vocab-words.html#w-%E5%8F%8D%E7%99%BA"
  },
@@ -624,10 +662,12 @@
    2
   ],
   "q": [
-   1
+   1,
+   7
   ],
   "words": [
-   "元祖"
+   "元祖",
+   "根底"
   ],
   "url": "https://syu-toutousai.github.io/jlpt-n1-question-bank/vocab-words.html#w-%E5%85%83%E7%A5%96"
  },
@@ -860,6 +900,30 @@
   ],
   "url": "https://syu-toutousai.github.io/jlpt-n1-question-bank/vocab-words.html#w-%E8%A3%8F%E7%9B%AE"
  },
+ "覆": {
+  "mondai": [
+   2
+  ],
+  "q": [
+   7
+  ],
+  "words": [
+   "根底"
+  ],
+  "url": "https://syu-toutousai.github.io/jlpt-n1-question-bank/vocab-words.html#q7"
+ },
+ "見": {
+  "mondai": [
+   2
+  ],
+  "q": [
+   7
+  ],
+  "words": [
+   "根底"
+  ],
+  "url": "https://syu-toutousai.github.io/jlpt-n1-question-bank/vocab-words.html#q7"
+ },
  "誓": {
   "mondai": [
    1
@@ -871,6 +935,18 @@
    "誓約書"
   ],
   "url": "https://syu-toutousai.github.io/jlpt-n1-question-bank/vocab-words.html#w-%E8%AA%93%E7%B4%84%E6%9B%B8"
+ },
+ "説": {
+  "mondai": [
+   2
+  ],
+  "q": [
+   7
+  ],
+  "words": [
+   "根底"
+  ],
+  "url": "https://syu-toutousai.github.io/jlpt-n1-question-bank/vocab-words.html#q7"
  },
  "護": {
   "mondai": [
@@ -931,6 +1007,18 @@
    "足手まとい"
   ],
   "url": "https://syu-toutousai.github.io/jlpt-n1-question-bank/vocab-words.html#w-%E8%B6%B3%E6%89%8B%E3%81%BE%E3%81%A8%E3%81%84"
+ },
+ "跡": {
+  "mondai": [
+   2
+  ],
+  "q": [
+   7
+  ],
+  "words": [
+   "根底"
+  ],
+  "url": "https://syu-toutousai.github.io/jlpt-n1-question-bank/vocab-words.html#q7"
  },
  "返": {
   "mondai": [
@@ -994,6 +1082,18 @@
    "進呈"
   ],
   "url": "https://syu-toutousai.github.io/jlpt-n1-question-bank/vocab-words.html#w-%E9%80%B2%E6%AD%A9"
+ },
+ "遺": {
+  "mondai": [
+   2
+  ],
+  "q": [
+   7
+  ],
+  "words": [
+   "根底"
+  ],
+  "url": "https://syu-toutousai.github.io/jlpt-n1-question-bank/vocab-words.html#q7"
  },
  "還": {
   "mondai": [

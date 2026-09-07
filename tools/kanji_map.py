@@ -60,6 +60,7 @@ def parse_md(path, mondai):
 
 def main():
     kanji = {}  # char -> {"mondai":set, "q":set, "words":[], "url":str}
+    card_chars = set()
     for rel, mondai in MATERIALS:
         p = SIBLING / rel
         if not p.exists():
@@ -69,6 +70,7 @@ def main():
             if not q:
                 continue
             for ch in set(CJK_RE.findall(word)):
+                card_chars.add(ch)
                 e = kanji.setdefault(ch, {"mondai": [], "q": [], "words": [], "url": ""})
                 if mondai not in e["mondai"]:
                     e["mondai"].append(mondai)
@@ -76,6 +78,20 @@ def main():
                     e["q"].append(q)
                 if word not in e["words"]:
                     e["words"].append(word)
+    qfile = ROOT / "data" / "questions.json"
+    if qfile.exists():
+        for q in json.loads(qfile.read_text(encoding="utf-8")):
+            text = q["stem"] + "".join(q["options"])
+            for ch in set(CJK_RE.findall(text)):
+                e = kanji.setdefault(ch, {"mondai": [], "q": [], "words": [], "url": ""})
+                if q["mondai"] not in e["mondai"]:
+                    e["mondai"].append(q["mondai"])
+                if q["q"] not in e["q"]:
+                    e["q"].append(q["q"])
+                if ch not in card_chars and not e["url"]:
+                    e["url"] = PAGE + "#q%d" % q["q"]
+                if q["answer"] not in e["words"]:
+                    e["words"].append(q["answer"])
     for e in kanji.values():
         e["mondai"].sort()
         e["q"].sort()

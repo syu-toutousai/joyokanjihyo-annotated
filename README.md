@@ -34,6 +34,19 @@ Clicking the kanji (or its icon cluster) jumps to the word card in the
 | `tools/kanji_map.py` | extracts 漢字 → 問/link map from the study material |
 | `tools/annotate_pdf.py` | draws badges + link annotations onto the PDF |
 | `data/kanji_labels.json` | kanji → {問, Q, words, url} generated map |
+| `data/questions.json` | hand-inputted exam questions, validated & cited |
+
+### Hand-inputted questions (語幹漢字 ネット追加)
+
+手入力した問題は `data/questions.json` に記録します（語幹・選択肢・正解・
+検証ソース一式）。`tools/kanji_map.py` は語幹・選択肢の漢字も取り込みます:
+
+- カード語由来の漢字は従来どおり語彙カード（`#w-…`）へリンク
+- 語幹にしか現れない漢字（例: 遺・跡・覆）は当該問題（`#q7` など）へリンク
+
+例: `2024-07 N1 語彙 問題2(7) 遺跡の発見…説を覆す` — 当初の手入力「処点」
+は誤りで「拠点」が正しいことを 5 件の公開ソース（採点表・復元サイト）で
+検証済み（`questions.json` の `sources`）。
 
 ## Why two features are skipped for some kanji
 
