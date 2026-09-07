@@ -1,0 +1,4 @@
+.venv/
+__pycache__/
+data/prev_*.png
+data/check_*.png
