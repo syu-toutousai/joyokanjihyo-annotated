@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Annotate the 常用漢字表 PDF with study-material links.
+"""Annotate the 常用漢字表 PDF with question-bank links.
 
 Every kanji from data/kanji_labels.json that appears as a 本表 entry gets a
 small icon cluster placed in the whitespace band directly ABOVE the glyph
@@ -7,36 +7,39 @@ small icon cluster placed in the whitespace band directly ABOVE the glyph
 the 音/訓/例 columns that follow it:
 
     ┌────┐
-    │ 20 │   ( )   (①)
-    │ 24 │    N1
+    │ 20 │  N1 (語)(文)(読)(聴)
+    │ 24 │
     └────┘
-                    ← the icon cluster, then
-      腐           ← the 字形 column
-      ホ　フ　...   ← 音/訓 column (never covered)
+                     ← the icon cluster, then
+       腐            ← the 字形 column
+       ホ　フ　...    ← 音/訓 column (never covered)
 
 Icons per element (colour-coded, 一目):
-  - 2024  → small navy rectangle "20 / 24"
+  - 2024  → small navy rectangle "20 / 24"  (出題年度)
   - N1    → red circle
-  - 問     → filled circle in the 問 colour carrying ①/② (①=問題1 indigo,
-              ②=問題2 orange; both are shown when the kanji appears in both)
+  - 題種  → one filled circle per exam section the kanji appeared in, in the
+            question-bank site's section colours, carrying the letter
+            語 / 文 / 読 / 聴 (語彙, 文法, 読解, 聴解)
 
-The glyph and the icon cluster are wrapped in one PDF Link annotation
-pointing at the matching word card: vocab-words.html#w-<word>
+The glyph and the icon cluster are wrapped in one PDF Link annotation:
+  - kanji that is a 語彙カード word  → the public 学習材料 page:                        vocab-words*.html#w-<word>
+  - 語彙 問題1/2 (q1..q13)           → the public 学習材料 question anchor:            vocab-words*.html#q<num>
+  - everything else (文法/読解/聴解) → deep link into the encrypted question bank:     index.html#q=<question-id>
 
 Besides the badge pass, two more annotation kinds are produced:
 
-  - HIGHLIGHT pass: 教材の語（漢字単語）が本表の「音・訓・例・備考」欄にも
-    現れている場合、その語をマーカー色で塗りつぶし、語彙カードへリンクする。
+  - HIGHLIGHT pass: 教材の語が本表の「音・訓・例・備考」欄にも現れている場合、
+    その語をマーカー色で塗りつぶし、語彙カードへリンクする。
 
-  - APPENDIX (付録): 常用漢字表に収録されない表外漢字（教材の語に現れたもの）
-    は、本表と同じ体裁（字形・音・訓・例・備考）の行を末尾の新ページに追加し、
-    本表と同じくアイコン群＋カードへのリンクを付す。
+  - APPENDIX (付録): 常用漢字表に収録されない表外漢字（教材に現れたもの）は、
+    本表と同じ体裁（字形・音・訓・例・備考）の行を末尾の新ページに追加し、
+    本表と同じくアイコン群＋リンクを付す。読みは Unihan のkJapaneseOn/kun による。
 
 Output: src/joyokanjihyo_20101130_annotated.pdf
 """
 import collections
 import json
-import sys
+import re
 from pathlib import Path
 from urllib.parse import quote
 
@@ -47,14 +50,18 @@ SRC = ROOT / "src" / "joyokanjihyo_20101130.pdf"
 OUT = ROOT / "src" / "joyokanjihyo_20101130_annotated.pdf"
 LABELS = json.loads((ROOT / "data" / "kanji_labels.json").read_text(encoding="utf-8"))
 
-PAGE = "https://syu-toutousai.github.io/jlpt-n1-question-bank/vocab-words.html"
+BASE = "https://syu-toutousai.github.io/jlpt-n1-question-bank"
+VOCAB_PAGES = {"2024-07": BASE + "/vocab-words.html",
+               "2024-12": BASE + "/vocab-words-2024-12.html"}
 
 FONT = "china-s"
 NAVY = (0.10, 0.18, 0.46)       # 2024 rectangle
 RED = (0.85, 0.13, 0.12)        # N1 circle
-COLOR_Q1 = (0.29, 0.42, 0.95)   # 問題1 ①
-COLOR_Q2 = (0.91, 0.35, 0.05)   # 問題2 ②
-ON_CIRCLE = {1: "①", 2: "②"}
+SEC_LABEL = {"vocab": "語", "grammar": "文", "reading": "読", "listening": "聴"}
+SEC_COLOR = {"vocab": (0.91, 0.35, 0.05),   # matches the question-bank site
+             "grammar": (0.18, 0.62, 0.27),
+             "reading": (0.10, 0.44, 0.76),
+             "listening": (0.88, 0.19, 0.19)}
 MARK = (0.98, 0.86, 0.28)       # 語のハイライト色（マーカー）
 
 GAP_LEFT = 55.0     # 字形 column x window
@@ -64,7 +71,7 @@ BAND_GAP = 1.0      # whitespace between band bottom and glyph top
 ICON_GAP = 1.2      # horizontal gap between icons
 YEAR_FS = 3.0
 N1_FS = 2.7
-CIR_FS = 4.5
+SEC_FS = 3.4
 
 # 付録（表外漢字）ページの体裁 —— 本表の列配置（音=135.9 / 例=209.9）に揃える
 APP_X0 = 50.0
@@ -72,9 +79,32 @@ APP_X1 = 135.9      # 字形 / 音
 APP_X2 = 209.9      # 音 / 例
 APP_X3 = 311.0      # 例 / 備考
 ROW_H = 36.0
+# 表外漢字: (音, 訓, 例, 備考) — 音・訓は Unihan 8.0 kJapaneseOn/kJapaneseKun。
+# 例は問題バンクでの実際の語（教材語）に揃える。
 EXTRA = {
     "咎": ("キュウ", "　とが・める　とが", "咎める，責咎", "常用漢字表外"),
     "脆": ("ゼイ", "　もろ・い", "脆い，脆弱", "常用漢字表外"),
+    "填": ("テン・チン", "　うず・める　ふさぐ", "補填，填まる", "常用漢字表外"),
+    "惹": ("ジャ・ジャク", "　ひく", "注意を惹く（関心を惹いた）", "常用漢字表外"),
+    "捷": ("ショウ・ソウ", "　はやい", "敏捷，捷(注)", "常用漢字表外"),
+    "揃": ("セン", "　そろ・う　そろ・える　そろい", "揃う（揃ったら）", "常用漢字表外"),
+    "揉": ("ジュウ", "　もむ", "揉める（揉めてて）", "常用漢字表外"),
+    "撫": ("ブ・フ", "　なでる", "撫でる（撫で続け）", "常用漢字表外"),
+    "斂": ("レン", "　おさめる", "収斂（収斂進化）", "常用漢字表外"),
+    "歪": ("ワイ", "　ゆがむ　ひずむ", "歪む（歪んでしまった）", "常用漢字表外"),
+    "汲": ("キュウ", "　くむ", "汲む（意を汲み）", "常用漢字表外"),
+    "淘": ("トウ", "　よな・げる", "淘汰(注)", "常用漢字表外"),
+    "澤": ("タク", "　さわ", "澤田（人物名）", "常用漢字表外・沢の旧字形"),
+    "爬": ("ハ", "（訓なし）", "爬虫類", "常用漢字表外"),
+    "繋": ("ケイ", "　つなぐ　かける", "繋がる，繋ぎ合わ", "常用漢字表外・繋の俗字"),
+    "罠": ("ビン・ミン", "　わな", "罠", "常用漢字表外"),
+    "茸": ("ジョウ", "　きのこ　たけ", "茸，山菜も茸も", "常用漢字表外"),
+    "蒔": ("シ・ジ", "　まく　うえる", "蒔く（種を蒔く）", "常用漢字表外"),
+    "辭": ("ジ・シ", "（訓なし）", "辭言（問題バンク語）", "常用漢字表外・辞の旧字形"),
+    "辿": ("テン", "　たど・る　たどり", "辿り着く（辿り着けない）", "常用漢字表外"),
+    "迂": ("ウ", "（訓なし）", "迂闊（迂闊さ）", "常用漢字表外"),
+    "闊": ("カツ", "　ひろ・い", "迂闊(注)", "常用漢字表外"),
+    "馴": ("シュン・クン", "　なれ・る　なら・す", "馴れる（馴れてくる）", "常用漢字表外"),
 }
 
 
@@ -85,13 +115,12 @@ def tw(text, fs):
 def icon_blocks(info):
     """Return list of (kind, payload) icon specs for a kanji entry."""
     blocks = [("year", None), ("n1", None)]
-    for m in info["mondai"]:  # ① then ②
-        blocks.append(("sai", m))
+    for sec in info["sections"]:
+        blocks.append(("sec", sec))
     return blocks
 
 
 def size_of(blocks):
-    """widths/heights for the icon cluster."""
     sizes = []
     for kind, extra in blocks:
         if kind == "year":
@@ -99,14 +128,13 @@ def size_of(blocks):
         elif kind == "n1":
             sizes.append(("n1", ICON_H, ICON_H))
         else:
-            sizes.append(("sai", ICON_H - 0.5, ICON_H - 0.5))
+            sizes.append(("sec", ICON_H, ICON_H))
     w = sum(s[1] for s in sizes) + ICON_GAP * (len(sizes) - 1)
     return sizes, w
 
 
-def draw_cluster(page, x, ytop, blocks, colors):
+def draw_cluster(page, x, ytop, blocks):
     """Draw the icon cluster at x (left), top y; return right edge."""
-    cxs = []
     xcur = x
     for kind, extra in blocks:
         if kind == "year":
@@ -127,13 +155,13 @@ def draw_cluster(page, x, ytop, blocks, colors):
                              "N1", fontname=FONT, fontsize=N1_FS, color=(1, 1, 1))
             xcur += d
         else:
-            c = COLOR_Q1 if extra == 1 else COLOR_Q2
-            d = ICON_H - 0.5
+            d = ICON_H
             cx = xcur + d / 2
             cy = ytop + d / 2
-            page.draw_circle(pymupdf.Point(cx, cy), d / 2, color=c, fill=c, width=0)
-            page.insert_text((cx - tw(ON_CIRCLE[extra], CIR_FS) / 2, cy + CIR_FS * 0.35),
-                             ON_CIRCLE[extra], fontname=FONT, fontsize=CIR_FS, color=(1, 1, 1))
+            page.draw_circle(pymupdf.Point(cx, cy), d / 2,
+                             color=SEC_COLOR[extra], fill=SEC_COLOR[extra], width=0)
+            page.insert_text((cx - tw(SEC_LABEL[extra], SEC_FS) / 2, cy + SEC_FS * 0.35),
+                             SEC_LABEL[extra], fontname=FONT, fontsize=SEC_FS, color=(1, 1, 1))
             xcur += d
         xcur += ICON_GAP
     return xcur - ICON_GAP
@@ -163,15 +191,16 @@ def find_entries(doc):
 
 
 def highlight_words(doc):
-    """中同出路: 教材で拾った語が本体の音・訓・例・備考欄にも現れていれば
-    マーカー色で塗り、語彙カードへリンクする。字形欄（x<120）は対象外。
+    """教材で拾った語が本表の音・訓・例・備考欄にも現れていればマーカー色で
+    塗り、語彙カードへリンクする。字形欄（x<120）は対象外。
     Returns number of highlighted occurrences."""
     words = []
     for v in LABELS.values():
-        for w in v["words"]:
-            if w and w not in words:
-                words.append(w)
-    words.sort(key=len, reverse=True)
+        for m in v["words"]:
+            w = m["w"]
+            if all(not (x["w"] == w and x["page"] == m["page"]) for x in words):
+                words.append(m)
+    words.sort(key=lambda m: len(m["w"]), reverse=True)
     hits = 0
     for pno in range(10, 161):  # 本表（ページ11〜161）
         page = doc[pno]
@@ -186,7 +215,8 @@ def highlight_words(doc):
         for arr in base.values():
             arr.sort(key=lambda t: t[1][0])
             line = "".join(c for c, _ in arr)
-            for w in words:
+            for m in words:
+                w = m["w"]
                 start = 0
                 while True:
                     i = line.find(w, start)
@@ -207,7 +237,8 @@ def highlight_words(doc):
                         ha.update()
                         page.insert_link({"kind": pymupdf.LINK_URI,
                                           "from": rect + pymupdf.Rect(-1, -1, 1, 1),
-                                          "uri": PAGE + "#w-" + quote(w)})
+                                          "uri": VOCAB_PAGES[m["page"]] + quote(m["anchor"],
+                                                                                safe="")})
                         hits += 1
                     start = i + 1
     return hits
@@ -232,14 +263,18 @@ def add_appendix(doc, missing):
         return 0, []
     W, H = doc[0].rect.width, doc[0].rect.height
     page = doc.new_page(width=W, height=H)
-    page.insert_text((APP_X0, 40), "付録　教材の語に現れる常用漢字表外の漢字",
+    page.insert_text((APP_X0, 40), "付録　問題バンクに現れる常用漢字表外の漢字",
                      fontname=FONT, fontsize=16)
     page.insert_text((APP_X0, 58),
-                     "常用漢字表（平成22年内閣告示第二号）に収録されないが教材の語に現れる文字。"
-                     "本表と同じ体裁で示し、アイコン·リンクも同様に付す。",
+                     "常用漢字表（平成22年内閣告示第二号）に収録されないが問題バンク（2024年7月・12月）"
+                     "の題文・選択肢・聴解原文に現れる文字。"
+                     "本表と同じ体裁で示し、アイコン・リンクも同様に付す。",
+                     fontname=FONT, fontsize=9)
+    page.insert_text((APP_X0, 72),
+                     "音・訓は Unihan 8.0 の kJapaneseOn / kJapaneseKun、例は問題バンクでの実例。",
                      fontname=FONT, fontsize=9)
     pages = 1
-    y = 84.0
+    y = 92.0
     draw_appendix_header(page, y)
     y += 8
     for ch in sorted(missing):
@@ -254,10 +289,11 @@ def add_appendix(doc, missing):
         gcx = (APP_X0 + APP_X1) / 2
         start_x = gcx - cw / 2
         band_top = y - 1.0 - ICON_H
-        draw_cluster(page, start_x, band_top, blocks, info["mondai"])
+        draw_cluster(page, start_x, band_top, blocks)
         gw = tw(ch, 18)
         page.insert_text((gcx - gw / 2, y + 15), ch, fontname=FONT, fontsize=18)
-        on, kun, rei, biko = EXTRA.get(ch, ("", "", info["words"][0] if info["words"] else ch, "常用漢字表外"))
+        on, kun, rei, biko = EXTRA.get(
+            ch, ("", "", info["words"][0]["w"] if info["words"] else ch, "常用漢字表外"))
         page.insert_text((APP_X1 + 4, y + 8), on, fontname=FONT, fontsize=10.5)
         page.insert_text((APP_X1 + 4, y + 21), kun, fontname=FONT, fontsize=10.5)
         page.insert_text((APP_X2 + 4, y + 8), rei, fontname=FONT, fontsize=10.5)
@@ -285,12 +321,12 @@ def main():
         start_x = cx - cw / 2
         ytop = gy0 - BAND_GAP - ICON_H
         page = doc[pno]
-        end_x = draw_cluster(page, start_x, ytop, blocks, info["mondai"])
+        end_x = draw_cluster(page, start_x, ytop, blocks)
         link_rect = pymupdf.Rect(start_x - 1.5, gy0 - BAND_GAP - ICON_H - 0.5,
                                  max(gx1 + 1.5, end_x + 1.5), gy1 + 1.5)
         page.insert_link({"kind": pymupdf.LINK_URI, "from": link_rect, "uri": info["url"]})
         placed += 1
-        stats.append((ch, pno + 1, start_x, ytop, info["mondai"], info["url"]))
+        stats.append((ch, pno + 1, "".join(SEC_LABEL[s] for s in info["sections"]), info["url"]))
     hits = highlight_words(doc)
     app_pages, app_chars = add_appendix(doc, missing)
     doc.save(OUT, garbage=3, deflate=True)
@@ -299,9 +335,9 @@ def main():
         print("NOT FOUND in 本表 → appendix:", " ".join(missing))
     print(f"highlighted word occurrences: {hits}")
     print(f"appendix: {len(app_chars)} kanji on {app_pages} page(s); total pages now {len(doc)}")
-    for ch, pno, x, y, mondai, url in stats:
-        print(f"  {ch}  page {pno:>3}  icons@({x:.1f},{y:.1f})  mondai={mondai}\t{url}")
+    for ch, pno, secs, url in stats:
+        print(f"  {ch}  page {pno:>3}  sections={secs}\t{url}")
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()
