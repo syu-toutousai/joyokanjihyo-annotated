@@ -73,21 +73,24 @@ YEAR_FS = 3.0
 N1_FS = 2.7
 SEC_FS = 3.4
 
-# 付録（表外漢字）ページの体裁 —— 本表の列配置（音=135.9 / 例=209.9）に揃える
+# 付録（表外漢字）ページの体裁 —— 本表（ページ11）の実測と同じ罫線・列・字級
+# 罫線: 58.2 / 131.4 / 204.5 / 361.3 （垂直罫は行領域全体に延びる）
+# 本文の開始 x: 音=135.9 / 例=209.9 / 備考=366.9（各罫線の右 4.5pt）
 APP_X0 = 50.0
-APP_X1 = 135.9      # 字形 / 音
-APP_X2 = 209.9      # 音 / 例
-APP_X3 = 311.0      # 例 / 備考
+APP_RX = (58.2, 131.4, 204.5, 361.3)   # 罫線位置
+APP_TEXT = {"kun": 135.9, "rei": 209.9, "biko": 366.9}
+APP_BIKO_CX = 449.7   # 備考 見出し中心（本表の「備　考」に揃える）
 ROW_H = 36.0
+ROW_FS = 10.5         # 本表の行文字と同じ字級
 # 表外漢字: (音, 訓, 例, 備考) — 音・訓は Unihan 8.0 kJapaneseOn/kJapaneseKun。
 # 例は問題バンクでの実際の語（教材語）に揃える。
 EXTRA = {
     "咎": ("キュウ", "　とが・める　とが", "咎める，責咎", "常用漢字表外"),
     "脆": ("ゼイ", "　もろ・い", "脆い，脆弱", "常用漢字表外"),
-    "填": ("テン・チン", "　うず・める　ふさぐ", "補填，填まる", "常用漢字表外"),
+    "填": ("テン・チン", "　うず・める", "補填，填まる", "常用漢字表外"),
     "惹": ("ジャ・ジャク", "　ひく", "注意を惹く（関心を惹いた）", "常用漢字表外"),
     "捷": ("ショウ・ソウ", "　はやい", "敏捷，捷(注)", "常用漢字表外"),
-    "揃": ("セン", "　そろ・う　そろ・える　そろい", "揃う（揃ったら）", "常用漢字表外"),
+    "揃": ("セン", "　そろう　そろえる", "揃う（揃ったら）", "常用漢字表外"),
     "揉": ("ジュウ", "　もむ", "揉める（揉めてて）", "常用漢字表外"),
     "撫": ("ブ・フ", "　なでる", "撫でる（撫で続け）", "常用漢字表外"),
     "斂": ("レン", "　おさめる", "収斂（収斂進化）", "常用漢字表外"),
@@ -104,7 +107,7 @@ EXTRA = {
     "辿": ("テン", "　たど・る　たどり", "辿り着く（辿り着けない）", "常用漢字表外"),
     "迂": ("ウ", "（訓なし）", "迂闊（迂闊さ）", "常用漢字表外"),
     "闊": ("カツ", "　ひろ・い", "迂闊(注)", "常用漢字表外"),
-    "馴": ("シュン・クン", "　なれ・る　なら・す", "馴れる（馴れてくる）", "常用漢字表外"),
+    "馴": ("シュン・クン", "　なれる　ならす", "馴れる（馴れてくる）", "常用漢字表外"),
 }
 
 
@@ -244,16 +247,32 @@ def highlight_words(doc):
     return hits
 
 
+def fit(text, fs, maxw):
+    """Reduce font size until the text fits maxw (never below 7pt)."""
+    while fs > 7.0 and tw(text, fs) > maxw:
+        fs -= 0.5
+    return fs
+
+
+def col_budget(col_start, rule_right):
+    """Usable width = gap to the right rule minus a 0.6pt gutter."""
+    return rule_right - col_start - 0.6
+
+
 def draw_appendix_header(page, y):
-    page.draw_line((APP_X0, y - 10), (APP_X3, y - 10))
-    page.insert_text((APP_X0 + 6, y), "漢字", fontname=FONT, fontsize=10.5)
-    page.insert_text((APP_X1 + 4, y), "音", fontname=FONT, fontsize=10.5)
-    page.insert_text((APP_X2 + 4, y), "訓", fontname=FONT, fontsize=10.5)
-    page.insert_text((APP_X3 + 4, y), "例", fontname=FONT, fontsize=10.5)
-    page.insert_text((APP_X3 + 60, y), "備考", fontname=FONT, fontsize=10.5)
-    for x in (APP_X0, APP_X1, APP_X2, APP_X3):
+    page.draw_line((APP_X0, y - 10), (538.1, y - 10))
+
+    def clabel(cx, txt):
+        page.insert_text((cx - tw(txt, ROW_FS) / 2, y), txt,
+                         fontname=FONT, fontsize=ROW_FS)
+
+    (x_and, x_on, x_rei, x_biko) = APP_RX
+    clabel((x_and + x_on) / 2, "漢字")
+    clabel((x_on + x_rei) / 2, "音　訓")
+    clabel((x_rei + x_biko) / 2, "例")
+    clabel(APP_BIKO_CX, "備考")
+    for x in (x_and, x_on, x_rei, x_biko):
         page.draw_line((x, y - 10), (x, 800))
-    page.draw_line((APP_X0, 800), (APP_X3, 800))
 
 
 def add_appendix(doc, missing):
@@ -266,11 +285,11 @@ def add_appendix(doc, missing):
     page.insert_text((APP_X0, 40), "付録　問題バンクに現れる常用漢字表外の漢字",
                      fontname=FONT, fontsize=16)
     page.insert_text((APP_X0, 58),
-                     "常用漢字表（平成22年内閣告示第二号）に収録されないが問題バンク（2024年7月・12月）"
-                     "の題文・選択肢・聴解原文に現れる文字。"
-                     "本表と同じ体裁で示し、アイコン・リンクも同様に付す。",
+                     "常用漢字表（平成22年内閣告示第二号）に収録されないが問題バンク（2024年7月・12月）の"
+                     "題文・選択肢・聴解原文に現れる文字。",
                      fontname=FONT, fontsize=9)
-    page.insert_text((APP_X0, 72),
+    page.insert_text((APP_X0, 70),
+                     "本表と同じ体裁で示す。アイコン・リンクも同様に付す。"
                      "音・訓は Unihan 8.0 の kJapaneseOn / kJapaneseKun、例は問題バンクでの実例。",
                      fontname=FONT, fontsize=9)
     pages = 1
@@ -286,7 +305,8 @@ def add_appendix(doc, missing):
             y = 92.0
         blocks = icon_blocks(info)
         sizes, cw = size_of(blocks)
-        gcx = (APP_X0 + APP_X1) / 2
+        (_x_and, x_on, x_rei, x_biko) = APP_RX
+        gcx = (APP_X0 + x_on) / 2
         start_x = gcx - cw / 2
         band_top = y - 1.0 - ICON_H
         draw_cluster(page, start_x, band_top, blocks)
@@ -294,11 +314,17 @@ def add_appendix(doc, missing):
         page.insert_text((gcx - gw / 2, y + 15), ch, fontname=FONT, fontsize=18)
         on, kun, rei, biko = EXTRA.get(
             ch, ("", "", info["words"][0]["w"] if info["words"] else ch, "常用漢字表外"))
-        page.insert_text((APP_X1 + 4, y + 8), on, fontname=FONT, fontsize=10.5)
-        page.insert_text((APP_X1 + 4, y + 21), kun, fontname=FONT, fontsize=10.5)
-        page.insert_text((APP_X2 + 4, y + 8), rei, fontname=FONT, fontsize=10.5)
-        page.insert_text((APP_X3 + 4, y + 8), biko, fontname=FONT, fontsize=9)
-        link_rect = pymupdf.Rect(APP_X0 - 2, band_top - 1, APP_X3 + 6, y + 25)
+        x_kun, x_rei, x_biko = APP_TEXT["kun"], APP_TEXT["rei"], APP_TEXT["biko"]
+        (_x_and, x_on, x_rei_r, x_biko_r) = APP_RX
+        page.insert_text((x_kun, y + 8), on, fontname=FONT,
+                         fontsize=fit(on, ROW_FS, col_budget(x_kun, x_rei_r)))
+        page.insert_text((x_kun, y + 21), kun, fontname=FONT,
+                         fontsize=fit(kun, ROW_FS, col_budget(x_kun, x_rei_r)))
+        page.insert_text((x_rei, y + 8), rei, fontname=FONT,
+                         fontsize=fit(rei, ROW_FS, col_budget(x_rei, x_biko_r)))
+        page.insert_text((x_biko, y + 8), biko, fontname=FONT,
+                         fontsize=fit(biko, ROW_FS, col_budget(x_biko, 538.1)))
+        link_rect = pymupdf.Rect(APP_X0 - 2, band_top - 1, x_biko + 6, y + 25)
         page.insert_link({"kind": pymupdf.LINK_URI, "from": link_rect, "uri": info["url"]})
         y += ROW_H
     return pages, sorted(missing)
