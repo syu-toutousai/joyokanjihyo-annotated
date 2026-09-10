@@ -74,6 +74,36 @@ def jp_reading_chars():
 
 CJK_RE = re.compile(r"[\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]")
 KANA_RE = re.compile(r"[ぁ-んァ-ヶ\s]")
+RUN_RE = re.compile(r"[\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFFぁ-んァ-ヶ]+")
+
+
+def example_phrase(text, ch, maxlen=14):
+    """例欄用: 本文中の ch を含む短い語（漢字＋送り仮名の連なり）を 1 つ返す。
+    実例は OCR 化けを含むことがあるので、末尾の読点・助詞・化けを落として
+    ch 中心の 6 字程度に切り詰める。無ければ ch 単体。"""
+    cands = []
+    for m in RUN_RE.finditer(text):
+        run = m.group(0)
+        pos = run.find(ch)
+        if pos < 0:
+            continue
+        best = ch
+        # 長い連なり: ch より後ろの送り仮名＋漢字を最大 5 字、手前は漢字 1 字まで
+        # （が・を・に などの助詞は単語切れに見えるので手前に含めない）
+        left = ""
+        if pos > 0 and re.match(r"[\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]",
+                                run[pos - 1]):
+            left = run[pos - 1]
+        if pos < len(run) - 1:
+            tail = re.sub(r"[、。．・…！？\s]+$", "", run[pos + 1:pos + 6])
+            cand = left + ch + tail
+            best = cand if len(cand) <= maxlen else ch + tail[:maxlen - 1]
+        cands.append(best)
+    # 2 字以上の候補（ch 単体が手近にある場合も語を優先）、最短のものを採用
+    words = [c for c in cands if len(c) >= 2]
+    if words:
+        return min(words, key=len)
+    return ch
 
 
 def bank_questions():
@@ -140,7 +170,7 @@ def main():
 
     def ensure(ch):
         return kanji.setdefault(ch, {"papers": [], "sections": [],
-                                     "q": {}, "words": [], "url": ""})
+                                     "q": {}, "words": [], "example": "", "url": ""})
 
     # -------- vocabulary study materials (card words) --------
     # カード見出しは全27场の語彙・文法・読解材料から拾う（public #w- アンカー）。
@@ -180,7 +210,11 @@ def main():
         paper = m.group(1) + "-" + m.group(2)
         sec = q.get("section", "?")
         chars = question_kanji(q)
+        listen_text = ""
         if sec == "listening":
+            listen_text = "\n".join(
+                ln for ln in (q.get("explanation") or "").splitlines()
+                if KANA_RE.findall(ln) and KANA_RE.search(ln))
             chars |= transcript_kanji(q)
         if not chars:
             continue
@@ -194,6 +228,12 @@ def main():
             qs = e["q"].setdefault(paper, [])
             if qnum and qnum not in qs:
                 qs.append(qnum)
+            if not e.get("example"):
+                src = listen_text if sec == "listening" else (
+                    (q.get("question") or "") + "".join(q.get("options") or []) + " "
+                    + (q.get("answer") or ""))
+                if src:
+                    e["example"] = example_phrase(src, ch)
             if not e["url"]:
                 # public #q<num> anchor only exists for the flagship 2024 pages
                 # (old-session 問題1/2 materials are not published there)

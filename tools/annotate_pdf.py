@@ -426,7 +426,9 @@ def add_appendix(doc, missing):
     for ch in sorted(missing):
         info = LABELS[ch]
         on, kun, rei, biko = EXTRA.get(
-            ch, ("", "", info["words"][0]["w"] if info["words"] else ch, "常用漢字表外"))
+            ch, ("", "",
+                 info.get("example") or (info["words"][0]["w"] if info["words"] else ch),
+                 "常用漢字表外"))
         if not (on or kun):
             on, kun = AUTO_READINGS.get(ch, ("", ""))
         kl = kun_lines(kun)
