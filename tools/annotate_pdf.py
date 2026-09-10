@@ -6,16 +6,16 @@ small icon cluster placed in the whitespace band directly ABOVE the glyph
 (at the top edge of the 字形 cell), so it never overlaps the kanji entry or
 the 音/訓/例 columns that follow it:
 
-    ┌────┐
-    │ 20 │  N1 (語)(文)(読)(聴)
-    │ 24 │
-    └────┘
+    ┌───────┐
+    │ 10-25 │  N1 (語)(文)(読)(聴)
+    └───────┘
                      ← the icon cluster, then
        腐            ← the 字形 column
        ホ　フ　...    ← 音/訓 column (never covered)
 
 Icons per element (colour-coded, 一目):
-  - 2024  → small navy rectangle "20 / 24"  (出題年度)
+  - 収録年度 → small navy rectangle with the year RANGE across all papers the
+            kanji appeared in (single year '24', or span '10-25'), 右寄せ
   - N1    → red circle
   - 題種  → one filled circle per exam section the kanji appeared in, in the
             question-bank site's section colours, carrying the letter
@@ -39,6 +39,7 @@ Output: src/joyokanjihyo_20101130_annotated.pdf
 """
 import collections
 import json
+import os
 import re
 from pathlib import Path
 from urllib.parse import quote
@@ -51,8 +52,19 @@ OUT = ROOT / "src" / "joyokanjihyo_20101130_annotated.pdf"
 LABELS = json.loads((ROOT / "data" / "kanji_labels.json").read_text(encoding="utf-8"))
 
 BASE = "https://syu-toutousai.github.io/jlpt-n1-question-bank"
-VOCAB_PAGES = {"2024-07": BASE + "/vocab-words.html",
-               "2024-12": BASE + "/vocab-words-2024-12.html"}
+
+
+def _vocab_pages():
+    """Auto-derive public 学習材料 pages from the sibling docs/ build."""
+    _sib = Path(os.environ.get(
+        "JLPT_QB_ROOT", Path(__file__).resolve().parents[2] / "jlpt-n1-question-bank"))
+    out = {}
+    for _p in sorted((_sib / "docs").glob("vocab-words*.html")):
+        out[_p.stem[len("vocab-words"):].lstrip("-") or "2024-07"] = BASE + "/" + _p.name
+    return out
+
+
+VOCAB_PAGES = _vocab_pages()
 
 FONT = "china-s"
 NAVY = (0.10, 0.18, 0.46)       # 2024 rectangle
@@ -115,9 +127,16 @@ def tw(text, fs):
     return pymupdf.get_text_length(text, fontname=FONT, fontsize=fs)
 
 
+def year_text(info):
+    """収録年度区间: 単一年なら '24'、複数なら '10-25'（右寄せ表示用）。"""
+    years = sorted({int(p[:4]) for p in info["papers"]})
+    low, high = years[0] % 100, years[-1] % 100
+    return "%02d-%02d" % (low, high) if len(years) > 1 else "%02d" % low
+
+
 def icon_blocks(info):
     """Return list of (kind, payload) icon specs for a kanji entry."""
-    blocks = [("year", None), ("n1", None)]
+    blocks = [("year", year_text(info)), ("n1", None)]
     for sec in info["sections"]:
         blocks.append(("sec", sec))
     return blocks
@@ -127,7 +146,7 @@ def size_of(blocks):
     sizes = []
     for kind, extra in blocks:
         if kind == "year":
-            sizes.append(("year", max(tw("20", YEAR_FS), tw("24", YEAR_FS)) + 1.4, ICON_H))
+            sizes.append(("year", tw(extra, YEAR_FS) + 1.4, ICON_H))
         elif kind == "n1":
             sizes.append(("n1", ICON_H, ICON_H))
         else:
@@ -141,13 +160,13 @@ def draw_cluster(page, x, ytop, blocks):
     xcur = x
     for kind, extra in blocks:
         if kind == "year":
-            rect = pymupdf.Rect(xcur, ytop, xcur + max(tw("20", YEAR_FS), tw("24", YEAR_FS)) + 1.4,
+            rect = pymupdf.Rect(xcur, ytop, xcur + tw(extra, YEAR_FS) + 1.4,
                                 ytop + ICON_H)
             page.draw_rect(rect, color=NAVY, fill=NAVY, width=0)
-            for line, txt in ((1, "20"), (2, "24")):
-                baseline = rect.y0 + line * YEAR_FS + 0.5
-                page.insert_text((rect.x0 + (rect.width - tw(txt, YEAR_FS)) / 2, baseline),
-                                 txt, fontname=FONT, fontsize=YEAR_FS, color=(1, 1, 1))
+            cy = rect.y0 + rect.height / 2
+            page.insert_text((rect.x0 + (rect.width - tw(extra, YEAR_FS)) / 2,
+                              cy + YEAR_FS * 0.35),
+                             extra, fontname=FONT, fontsize=YEAR_FS, color=(1, 1, 1))
             xcur = rect.x1
         elif kind == "n1":
             d = ICON_H
@@ -294,10 +313,10 @@ def add_appendix(doc, missing):
                      "常用漢字表（平成22年内閣告示第二号）に収録されない漢字の付録。",
                      fontname=FONT, fontsize=9)
     page.insert_text((APP_X0, 68),
-                     "問題バンク（2024年7月・12月）の題文・選択肢・聴解原文に現れた文字を載せる。",
+                     "問題バンク（2010年7月-2025年7月 全27場）の題文・選択肢・聴解原文に現れた文字を載せる。",
                      fontname=FONT, fontsize=9)
     page.insert_text((APP_X0, 78),
-                     "音・訓は Unihan 8.0 を典拠とする。例は問題バンクでの実例。",
+                     "音・訓は既収録分のみ（Unihan 8.0 典拠）。例は問題バンクでの実例。",
                      fontname=FONT, fontsize=9)
     pages = 1
     y = 92.0
@@ -319,7 +338,7 @@ def add_appendix(doc, missing):
         sizes, cw = size_of(blocks)
         (_x_and, x_on, x_rei, x_biko) = APP_RX
         gcx = (APP_X0 + x_on) / 2
-        start_x = gcx - cw / 2
+        start_x = (gcx + 9) - cw  # 右端を字形コラム右寄せ
         band_top = y - 1.0 - ICON_H
         draw_cluster(page, start_x, band_top, blocks)
         gw = tw(ch, 18)
@@ -357,8 +376,8 @@ def main():
         pno, (gx0, gy0, gx1, gy1) = entries[ch]
         blocks = icon_blocks(info)
         sizes, cw = size_of(blocks)
-        cx = (gx0 + gx1) / 2
-        start_x = cx - cw / 2
+        # クラスタ右端を字形の右端に揃える（右寄せ、すべての収録年度を表示）
+        start_x = gx1 - cw
         ytop = gy0 - BAND_GAP - ICON_H
         page = doc[pno]
         end_x = draw_cluster(page, start_x, ytop, blocks)

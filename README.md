@@ -1,7 +1,7 @@
 # 常用漢字表 — JLPT N1 学習リンク版
 
 An annotated `常用漢字表`（平成22年内閣告示第2号）student edition. Every 漢字
-that appears anywhere in the JLPT N1 2024 question bank – 2024-07 and 2024-12,
+that appears anywhere in the JLPT N1 question bank – **2010-07 … 2025-07 の全 27 場**，
 all sections 語彙・文法・読解・聴解（聴解は原文テキストのカナ行のみ） – is
 marked with a small **icon cluster** placed in the whitespace band directly
 **above** the kanji entry (so it never touches the kanji or the 音・訓・例
@@ -14,9 +14,9 @@ Each icon is a colour-coded shape (一目で了解):
 
 | icon | meaning |
 | ---- | ------- |
-| `20/24` navy rectangle | 収録年度 2024 |
+| `10-25` navy rectangle | 収録年度の範囲（単年は `24`。全 27 場にまたがる） |
 | red circle with `N1` | JLPT N1 |
-| `語` orange circle | 語彙 section (2024-07・12 語彙) |
+| `語` orange circle | 語彙 section |
 | `文` green circle | 文法 section |
 | `読` blue circle | 読解 section |
 | `聴` red circle | 聴解 section（原文テキスト） |
@@ -27,10 +27,13 @@ match the section colours of the question-bank site.
 Clicking the kanji (or its icon cluster) jumps to the most specific public
 target, in this order:
 
-1. a 語彙カード word  → `vocab-words*.html#w-<word>` (58 + 53 cards, 公開)
-2. a 語彙 問題1/2 stem → `vocab-words*.html#q<1..13>` (公開)
-3. anything else (文法 / 読解 / 聴解) → deep link into the encrypted bank:
-   `index.html#q=<question-id>` (opens the 日题库 app on that exact question)
+1. a 語彙カード word  → `vocab-words*.html#w-<word>`（公開・フラッグシップ 2024-07
+   以外の 26 場は `vocab-words-<session>.html`）
+2. a 語彙 問題1/2 stem → `vocab-words*.html#q<1..13>`（公開・2024-07/12 のみ
+   用意）
+3. anything else (文法 / 読解 / 聴解 / 過去の 問題1・2) → deep link into the
+   encrypted bank: `index.html#q=<question-id>`（opens the 日题库 app on that
+   exact question）
 
 ## Files
 
@@ -46,9 +49,9 @@ target, in this order:
 
 ## 注釈の種類（annotated PDF に含まれる 3 種）
 
-1. **アイコンバッジ** – 問題バンク由来の常用漢字（本表エントリ）の字形直上余白帯に
-   アイコン群（2024 / N1 / 語・文・読・聴）を描き、上記リンク先（`#w-…` / `#q…` /
-   `index.html#q=…`）へのリンクを付す。
+1. **アイコンバッジ** – 問題バンク由来の漢字（本表 1736 字）の字形直上余白帯に
+   アイコン群（年度範囲 / N1 / 語・文・読・聴、右寄せ）を描き、上記リンク先
+   （`#w-…` / `#q…` / `index.html#q=…`）へのリンクを付す。
 2. **語のハイライト（黄色）** – 教材の語（漢字単語）が本表の音・訓・例・備考欄に
    現れている場合、その語をマーカー色で標し語彙カードへリンク
    （`tools/annotate_pdf.py` `highlight_words`、2024-12 頁のカード ID は `★` 付き
@@ -58,26 +61,27 @@ target, in this order:
 
 ## リンク先の優先順位とデータ源
 
-`tools/kanji_map.py` は `past-exams/**/*.json`（162 問）を走査します:
+`tools/kanji_map.py` は `past-exams/**/*.json`（全 27 場、計 2,746 問）を走査します:
 
 - 語幹・選択肢・正解の漢字（語彙・文法・読解）
 - 聴解は `explanation` の **カナ行のみ**（カナ密度 ≧ 40% の行）を原文として
   採集。中国語翻訳文（日本語語名を埋め込むことがある）は判定から除外。
+- 出題ソースに混入する簡体字・字体化け（処理→处里 など）は、正規日本語の
+  読みを持たない／化け専用の字形として Unihan（`refs/unihan`）で除去し、
+  LABELS・検索・付録のいずれにも含めない。
 
-カード語（正解語＋干扰项）は 2024 語彙 3 つの 学習材料ページ
-（`vocab-words.html`・`vocab-words-2024-12.html`）から、実ページの
+カード語（見出し語＋干扰项）は全 27 場の学習材料ページ
+（`vocab-words.html`・`vocab-words-<session>.html`）から、実ページの
 `data-w` アンカーを読んで収集。
 
-結果: 1070 字（本表 1047 + 表外付録 23）。リンク 142 件が公開ページ、
-928 件が暗号サイトへの deep-link。
+結果: 1,966 字 = 本表 1,736 + 表外付録 230。リンク 1,043 件が公開ページ、
+923 件が暗号サイトへの deep-link。
 
 ## Why some kanji are in the 付録 instead of the 本表
 
-咎・脆に加えて、2024 出題（読解・聴解テキスト・語彙の注）に現れた 21 字が
-**常用漢字表外**（例: 填・惹・捷・揃・揉・撫・斂・歪・汲・淘・澤・爬・繋・罠・茸・
-蒔・辭・辿・迂・闊・馴）。本表に無いため 付録ページ（本表と同じ体裁: 字形・音・訓・
-例・備考 ＋ アイコン＋リンク）に収録。音・訓は Unihan 8.0 の kJapaneseOn / kun、
-例は問題バンクでの実例（`tools/annotate_pdf.py` の `EXTRA`）。
+常用漢字表に収録されない表外字（迂・闊・饗・馴・辿・詫・這・汲 ほか 230 字、
+本表と同じ体裁: 字形・音・訓・例・備考 ＋ アイコン＋リンク）。音・訓は Unihan 8.0
+の kJapaneseOn / kun による既存 `EXTRA` 分のみ付与、例は問題バンクでの実例。
 
 ## Rebuilding
 
@@ -88,7 +92,8 @@ python3 -m venv .venv && .venv/bin/pip install pymupdf
 ```
 
 `tools/kanji_map.py` reads the sibling `jlpt-n1-question-bank` repository
-(default path `../jlpt-n1-question-bank`, override with `JLPT_QB_ROOT`).
+(override with `JLPT_QB_ROOT=/path/to/jlpt-n1-question-bank`; without it the
+default is `parents[2]/jlpt-n1-question-bank`, which is normally wrong).
 Adding future questions or words to the material and re-running the two tools
 updates the PDF automatically.
 

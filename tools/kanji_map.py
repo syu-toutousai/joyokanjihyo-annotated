@@ -2,10 +2,11 @@
 """Build data/kanji_labels.json — target-漢字 → question-bank link map.
 
 Scope: the ENTIRE question bank of the sibling repo `jlpt-n1-question-bank`
-(`past-exams/**/*.json` — 2024-07 + 2024-12, all sections 語彙/文法/読解/聴解).
-Every 漢字 that appears anywhere in the bank (question stems, options, correct
-answers, reading passages, listening transcripts) is collected together with
-its paper, section, question numbers, and the public study-material card words.
+(`past-exams/**/*.json` — 2010-07 … 2025-07 all 27 sessions, sections
+語彙/文法/読解/聴解). Every 漢字 that appears anywhere in the bank (question
+stems, options, correct answers, reading passages, listening transcripts) is
+collected together with its paper, section, question numbers, and the public
+study-material card words.
 
 Link priority (one URL per entry, the rest stays as data):
   1. a 語彙カード word on a public page   → vocab-words*.html#w-<card>
@@ -27,11 +28,49 @@ ROOT = Path(__file__).resolve().parent.parent
 SIBLING = Path(os.environ.get(
     "JLPT_QB_ROOT", Path(__file__).resolve().parents[2] / "jlpt-n1-question-bank"))
 BASE = "https://syu-toutousai.github.io/jlpt-n1-question-bank"
-VOCAB_PAGES = {"2024-07": BASE + "/vocab-words.html",
-               "2024-12": BASE + "/vocab-words-2024-12.html"}
 APP = BASE + "/index.html"
 VOCAB_Q12_TYPES = {"reading", "context"}  # 問題1・問題2 (have public q-anchors)
+
+
+def _vocab_pages():
+    """Auto-derive the public 学習材料 pages from the sibling's built docs/
+    (vocab-words.html = 2024-07 flagship, vocab-words-<session>.html for the
+    other 26 sessions) so the map stays in sync with the sibling repo."""
+    out = {}
+    for p in sorted((SIBLING / "docs").glob("vocab-words*.html")):
+        paper = p.stem[len("vocab-words"):].lstrip("-") or "2024-07"
+        out[paper] = BASE + "/" + p.name
+    return out
+
+
+VOCAB_PAGES = _vocab_pages()
 SECTION_ORDER = ["vocab", "grammar", "reading", "listening"]
+
+_JP_READING = None
+
+# 簡体字・OCR/フォント代替の化け（Unihan に読みが付いても実質は非日本語）
+JP_EXCLUDE = set("丕仃仴别办变囫圜增壳尐异忤步气污满漯瀲烋确稍絪耴")
+
+
+def jp_reading_chars():
+    """Chars having a Japanese reading in Unihan (kJapaneseOn/kJapaneseKun).
+
+    Filters out simplified-Chinese forms and OCR/フォント代替 garbles that leak
+    into the bank text (处/现/连/办 …). None means the Unihan file is missing
+    (then the filter is disabled)."""
+    global _JP_READING
+    if _JP_READING is not None:
+        return _JP_READING
+    path = SIBLING / "refs" / "unihan" / "Unihan_Readings.txt"
+    jp = set()
+    if path.exists():
+        for line in path.read_text(encoding="utf-8").splitlines():
+            fld = line.split("\t")
+            if len(fld) >= 2 and fld[0].startswith("U+") \
+                    and fld[1] in ("kJapaneseOn", "kJapaneseKun"):
+                jp.add(chr(int(fld[0][2:], 16)))
+    _JP_READING = jp or None
+    return _JP_READING
 
 CJK_RE = re.compile(r"[\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]")
 KANA_RE = re.compile(r"[ぁ-んァ-ヶ\s]")
@@ -104,11 +143,9 @@ def main():
                                      "q": {}, "words": [], "url": ""})
 
     # -------- vocabulary study materials (card words) --------
-    for rel in ("analysis/2024-07-vocab-reading-words.md",
-                "analysis/2024-07-vocab-context-words.md",
-                "analysis/2024-12-vocab-context-words.md"):
-        p = SIBLING / rel
-        if not p.exists():
+    # カード見出しは全27场の語彙・文法・読解材料から拾う（public #w- アンカー）。
+    for p in sorted((SIBLING / "analysis").glob("*-*.md")):
+        if p.name.endswith("-listening.md"):
             continue
         for line in open(p, encoding="utf-8"):
             if not line.startswith("### "):
@@ -142,8 +179,6 @@ def main():
             continue
         paper = m.group(1) + "-" + m.group(2)
         sec = q.get("section", "?")
-        if qid < "2024-07" or not (2024 <= int(m.group(1))):
-            pass
         chars = question_kanji(q)
         if sec == "listening":
             chars |= transcript_kanji(q)
@@ -160,7 +195,11 @@ def main():
             if qnum and qnum not in qs:
                 qs.append(qnum)
             if not e["url"]:
-                if sec == "vocab" and q.get("type") in VOCAB_Q12_TYPES and qnum:
+                # public #q<num> anchor only exists for the flagship 2024 pages
+                # (old-session 問題1/2 materials are not published there)
+                if (paper in ("2024-07", "2024-12")
+                        and sec == "vocab" and q.get("type") in VOCAB_Q12_TYPES
+                        and qnum):
                     e["url"] = VOCAB_PAGES[paper] + "#q%d" % qnum
                 else:
                     e["url"] = APP + "#q=" + qid
@@ -177,6 +216,12 @@ def main():
         e["papers"].sort()
         e["sections"] = [s for s in SECTION_ORDER if s in e["sections"]]
         e["q"] = {p: sorted(v) for p, v in sorted(e["q"].items())}
+    jp = jp_reading_chars()
+    if jp is not None:
+        n_drop = sum(1 for c in kanji if c not in jp or c in JP_EXCLUDE)
+        kanji = {c: e for c, e in kanji.items() if c in jp and c not in JP_EXCLUDE}
+    else:
+        n_drop = 0
     out = ROOT / "data" / "kanji_labels.json"
     out.write_text(json.dumps(kanji, ensure_ascii=False, indent=1), encoding="utf-8")
     n_url = n_app = n_pub = 0
@@ -188,6 +233,8 @@ def main():
             else:
                 n_pub += 1
     print(f"source: {SIBLING}")
+    if n_drop:
+        print(f"dropped without Japanese reading: {n_drop}")
     print(f"unique kanji: {len(kanji)}  (links: {n_url} = {n_pub} public + {n_app} app deep-link)")
     stocks = {p: sum(1 for e in kanji.values() if p in e["papers"]) for p in
               sorted({p for e in kanji.values() for p in e["papers"]})}
