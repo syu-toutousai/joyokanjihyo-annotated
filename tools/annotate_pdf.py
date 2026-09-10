@@ -76,8 +76,8 @@ SEC_COLOR = {"vocab": (0.91, 0.35, 0.05),   # matches the question-bank site
              "listening": (0.88, 0.19, 0.19)}
 MARK = (0.98, 0.86, 0.28)       # 語のハイライト色（マーカー）
 
-GAP_LEFT = 55.0     # 字形 column x window
-GAP_RIGHT = 95.0
+GAP_LEFT = 55.0     # 字形 column x window（括弧内異体字 龍 なども含む）
+GAP_RIGHT = 98.0    # 音・訓 column は x≈135 から始まるため安全
 ICON_H = 7.5        # icon band height (fits the 8.5pt whitespace above a glyph)
 BAND_GAP = 1.0      # whitespace between band bottom and glyph top
 ICON_GAP = 1.2      # horizontal gap between icons
