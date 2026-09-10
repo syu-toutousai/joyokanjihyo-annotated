@@ -80,8 +80,9 @@ target, in this order:
 ## Why some kanji are in the 付録 instead of the 本表
 
 常用漢字表に収録されない表外字（迂・闊・饗・馴・辿・詫・這・汲 ほか 202 字、
-本表と同じ体裁: 字形・音・訓・例・備考 ＋ アイコン＋リンク）。音・訓は Unihan 8.0
-の kJapaneseOn / kun による既存 `EXTRA` 分のみ付与、例は問題バンクでの実例。
+本表と同じ体裁: 字形・音・訓・例・備考 ＋ アイコン＋リンク）。音は Unihan 8.0
+kJapaneseOn / 訓は kJapaneseKun からの自動変換（`AUTO_READINGS`）、手入力の
+`EXTRA`（21 字）が優先。例は問題バンクでの実例。
 （括弧内の異体字 龍・亞・廣・晝・澤 などは「本表の字形欄」として捕捉し、付録には
 入れない。）
 

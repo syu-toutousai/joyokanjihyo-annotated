@@ -122,6 +122,107 @@ EXTRA = {
     "馴": ("シュン・クン", "　なれ・る　なら・す", "馴れる（馴れてくる）", "常用漢字表外"),
 }
 
+# ---- Unihan kJapaneseOn/kun のローマ字をかなへ変換（付録の残り 181 字用） ----
+_ROM2K = {
+    "a": "あ", "i": "い", "u": "う", "e": "え", "o": "お",
+    "ka": "か", "ki": "き", "ku": "く", "ke": "け", "ko": "こ",
+    "ga": "が", "gi": "ぎ", "gu": "ぐ", "ge": "げ", "go": "ご",
+    "sa": "さ", "shi": "し", "sha": "しゃ", "shu": "しゅ", "sho": "しょ",
+    "su": "す", "se": "せ", "so": "そ",
+    "za": "ざ", "ji": "じ", "ja": "じゃ", "ju": "じゅ", "jo": "じょ",
+    "zu": "ず", "ze": "ぜ", "zo": "ぞ",
+    "ta": "た", "chi": "ち", "cha": "ちゃ", "chu": "ちゅ", "cho": "ちょ",
+    "tsu": "つ", "te": "て", "to": "と",
+    "da": "だ", "di": "ぢ", "du": "づ", "de": "で", "do": "ど",
+    "na": "な", "ni": "に", "nu": "ぬ", "ne": "ね", "no": "の",
+    "ha": "は", "hi": "ひ", "fu": "ふ", "he": "へ", "ho": "ほ",
+    "ba": "ば", "bi": "び", "bu": "ぶ", "be": "べ", "bo": "ぼ",
+    "pa": "ぱ", "pi": "ぴ", "pu": "ぷ", "pe": "ぺ", "po": "ぽ",
+    "ma": "ま", "mi": "み", "mu": "む", "me": "め", "mo": "も",
+    "ya": "や", "yu": "ゆ", "yo": "よ",
+    "ra": "ら", "ri": "り", "ru": "る", "re": "れ", "ro": "ろ",
+    "wa": "わ", "wo": "を", "n": "ん",
+    "kya": "きゃ", "kyu": "きゅ", "kyo": "きょ",
+    "gya": "ぎゃ", "gyu": "ぎゅ", "gyo": "ぎょ",
+    "nya": "にゃ", "nyu": "にゅ", "nyo": "にょ",
+    "hya": "ひゃ", "hyu": "ひゅ", "hyo": "ひょ",
+    "bya": "びゃ", "byu": "びゅ", "byo": "びょ",
+    "pya": "ぴゃ", "pyu": "ぴゅ", "pyo": "ぴょ",
+    "mya": "みゃ", "myu": "みゅ", "myo": "みょ",
+    "rya": "りゃ", "ryu": "りゅ", "ryo": "りょ",
+    "waku": "わく",
+}
+_KANJI2KAT = str.maketrans(
+    "ぁあぃいぅうぇえぉおかがきぎくぐけげこご"
+    "さざしじすずせぜそぞただちぢっつづてでとど"
+    "なにぬねのはばぱひびぴふぶぷへべぺほぼぽ"
+    "まみむめもゃやゅゆょよらりるれろゎわゐゑをんゔゕゖ",
+    "ァアィイゥウェエォオカガキギクグケゲコゴ"
+    "サザシジスズセゼソゾタダチヂッツヅテデトド"
+    "ナニヌネノハバパヒビピフブプヘベペホボポ"
+    "マミムメモャヤュユョヨラリルレロヮワヰヱヲンヴヵヶ")
+
+_UNIHAN = None
+
+
+def unihan_readings():
+    """char -> {kJapaneseOn, kJapaneseKun}; None if the Unihan file is missing."""
+    global _UNIHAN
+    if _UNIHAN is not None:
+        return _UNIHAN
+    path = Path(os.environ.get("JLPT_QB_ROOT", Path(__file__).resolve().parents[2] /
+                               "jlpt-n1-question-bank")) / "refs" / "unihan" / "Unihan_Readings.txt"
+    data = {}
+    if path.exists():
+        for line in path.read_text(encoding="utf-8").splitlines():
+            fld = line.split("\t")
+            if len(fld) == 3 and fld[0].startswith("U+") \
+                    and fld[1] in ("kJapaneseOn", "kJapaneseKun"):
+                ch = chr(int(fld[0][2:], 16))
+                data.setdefault(ch, {})[fld[1]] = fld[2].strip()
+    _UNIHAN = data or None
+    return _UNIHAN
+
+
+def romaji_to_kana(tok):
+    """Unihan の読みトークン（例 'CHUU'・'USHI'）をひらがなへ。表外の拍はそのまま残す。"""
+    tok = tok.strip("().,;: ")
+    if not tok:
+        return ""
+    if tok == "PEEJI":                      # 頁の慣用読み ぺえじ→ページ
+        return "ぺえじ"
+    low = tok.lower()
+    out, i = [], 0
+    while i < len(low):
+        for ln in range(min(4, len(low) - i), 0, -1):
+            if low[i:i + ln] in _ROM2K:
+                out.append(_ROM2K[low[i:i + ln]])
+                i += ln
+                break
+        else:
+            out.append(low[i])
+            i += 1
+    return "".join(out)
+
+
+def appendix_auto_readings():
+    """EXTRA に無い付録漢字の (音, 訓) を Unihan から機械生成。
+    音はカタカナ・訓はひらがな（括弧内注記は削る）。Returns {char: (on, kun)}；
+    ファイル欠損時は空 dict。"""
+    data = unihan_readings() or {}
+    out = {}
+    for ch, r in data.items():
+        ons = [romaji_to_kana(t) for t in r.get("kJapaneseOn", "").split() if t.strip()]
+        kuns = [romaji_to_kana(t) for t in r.get("kJapaneseKun", "").split() if t.strip()]
+        on = "・".join(x.translate(_KANJI2KAT) for x in ons if x)
+        kun = "　".join(x for x in kuns if x)
+        if on or kun:
+            out[ch] = (on, kun)
+    return out
+
+
+AUTO_READINGS = appendix_auto_readings()
+
 
 def tw(text, fs):
     return pymupdf.get_text_length(text, fontname=FONT, fontsize=fs)
@@ -316,7 +417,7 @@ def add_appendix(doc, missing):
                      "問題バンク（2010年7月-2025年7月 全27場）の題文・選択肢・聴解原文に現れた文字を載せる。",
                      fontname=FONT, fontsize=9)
     page.insert_text((APP_X0, 78),
-                     "音・訓は既収録分のみ（Unihan 8.0 典拠）。例は問題バンクでの実例。",
+                     "音・訓は Unihan 8.0 の読み（kJapaneseOn/kun）を自動変換。例は問題バンクでの実例。",
                      fontname=FONT, fontsize=9)
     pages = 1
     y = 92.0
@@ -326,6 +427,8 @@ def add_appendix(doc, missing):
         info = LABELS[ch]
         on, kun, rei, biko = EXTRA.get(
             ch, ("", "", info["words"][0]["w"] if info["words"] else ch, "常用漢字表外"))
+        if not (on or kun):
+            on, kun = AUTO_READINGS.get(ch, ("", ""))
         kl = kun_lines(kun)
         n = max(1, len(kl))
         h = KLIN * n + 23.0            # 音行 + 訓各行 + 余白
